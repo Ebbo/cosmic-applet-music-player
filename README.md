@@ -2,7 +2,14 @@
 
 A modern music player applet for the COSMIC desktop environment with MPRIS integration, providing seamless control of your music directly from the panel.
 
-MusicPlayer <img src="MusicPlayer.png" alt="MusicPlayer">
+## Screenshots
+<img src="MusicPlayer.png" alt="MusicPlayer">
+
+The applet displays as a music icon in the COSMIC panel. Click it to open the control popup featuring:
+- Album artwork (left side)
+- Song title and artist information (right side)
+- Media control buttons (previous, play/pause, next)
+- Volume control slider
 
 ## Features
 
@@ -33,14 +40,6 @@ Works with any MPRIS-compatible music player, including:
 - Clementine
 - MPD clients
 - And many more!
-
-## Screenshots
-
-The applet displays as a music icon in the COSMIC panel. Click it to open the control popup featuring:
-- Album artwork (left side)
-- Song title and artist information (right side)
-- Media control buttons (previous, play/pause, next)
-- Volume control slider
 
 ## Installation
 
