@@ -1,0 +1,10 @@
+[workspace]
+members = [ "music-player" ]
+resolver = "2"
+
+[profile.release]
+lto = "fat"
+
+[workspace.lints.clippy]
+todo = "warn"
+unwrap_used = "warn"

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Music Player
+Type=Application
+Comment=COSMIC music player with MPRIS integration
+Exec=music-player
+Terminal=false
+Categories=COSMIC;AudioVideo;Music;
+Keywords=Music;Player;MPRIS;Audio;Media;
+Icon=com.cosmic.MusicPlayer
+StartupNotify=true
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto

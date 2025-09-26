@@ -1,0 +1,33 @@
+[package]
+name = "music-player"
+version = "1.0.0"
+edition = "2021"
+license = "GPL-3.0"
+rust-version = "1.80"
+description = "COSMIC Music Player with MPRIS integration"
+authors = ["COSMIC Community"]
+
+[dependencies]
+tokio = { version = "1.45.1", features = ["full"] }
+serde = { version = "1.0.219", features = ["derive"] }
+anyhow = "1.0.98"
+mpris = "2.0.1"
+futures = "0.3.31"
+chrono = "0.4.41"
+reqwest = "0.12.20"
+image = "0.25.6"
+bytes = "1.10.1"
+
+[dependencies.libcosmic]
+git = "https://github.com/pop-os/libcosmic.git"
+# To keep builds reproducible, libcosmic should be pegged to a rev.
+# This should be updated periodically.
+rev = "52b802a"
+default-features = false
+features = ["applet", "tokio", "wayland", "autosize"]
+
+# Uncomment to test a locally-cloned libcosmic
+# [patch.'https://github.com/pop-os/libcosmic']
+# libcosmic = { path = "../libcosmic" }
+# cosmic-config = { path = "../libcosmic/cosmic-config" }
+# cosmic-theme = { path = "../libcosmic/cosmic-theme" }

@@ -2,6 +2,8 @@
 
 A modern music player applet for the COSMIC desktop environment with MPRIS integration, providing seamless control of your music directly from the panel.
 
+MusicPlayer <img src="MusicPlayer.png" alt="MusicPlayer">
+
 ## Features
 
 ### 🎵 **Music Control**

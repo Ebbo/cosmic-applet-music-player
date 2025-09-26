@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <style>
+      .music-note { fill: #2563eb; }
+      .background { fill: #f1f5f9; stroke: #2563eb; stroke-width: 4; }
+    </style>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" class="background"/>
+
+  <!-- Music note -->
+  <path class="music-note" d="M 100 70 L 120 70 L 120 160 C 120 170 110 180 95 180 C 80 180 70 170 70 160 C 70 150 80 140 95 140 C 105 140 115 145 120 150 L 120 90 L 180 80 L 180 140 C 180 150 170 160 155 160 C 140 160 130 150 130 140 C 130 130 140 120 155 120 C 165 120 175 125 180 130 L 180 70 Z"/>
+</svg>
