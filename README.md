@@ -44,19 +44,28 @@ The applet displays as a music icon in the COSMIC panel. Click it to open the co
 
 ## Installation
 
-### Prerequisites
+### Arch Linux (AUR)
 
-- Rust 1.80+
-- COSMIC desktop environment
-- Just build tool
-- Git (for cloning)
+The applet is available as an **AUR package**:
 
-### Build from Source
+```bash
+paru -S cosmic-applet-music-player-git
+```
+
+or with yay:
+
+```bash
+yay -S cosmic-applet-music-player-git
+```
+
+This will build and install the latest development version directly from Git.
+
+### Build from Source (Other Distributions)
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
-   cd cosmic-music-player-applet
+   git clone https://github.com/Ebbo/cosmic-applet-music-player.git
+   cd cosmic-applet-music-player
    ```
 
 2. **Build the applet**:
@@ -69,7 +78,14 @@ The applet displays as a music icon in the COSMIC panel. Click it to open the co
    sudo just install
    ```
 
-### Development
+### Prerequisites
+
+- Rust 1.80+
+- COSMIC desktop environment
+- Just build tool
+- Git (for cloning)
+
+## Development
 
 For development and testing:
 
