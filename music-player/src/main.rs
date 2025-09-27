@@ -4,6 +4,7 @@
 /// application.
 mod app;
 mod music;
+mod config;
 
 use app::CosmicAppletMusic;
 

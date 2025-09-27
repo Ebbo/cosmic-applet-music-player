@@ -1,4 +1,5 @@
 use crate::music::{MusicController, PlayerInfo};
+use crate::config::ConfigManager;
 use cosmic::app::{Core, Task};
 use cosmic::iced::platform_specific::shell::wayland::commands::popup::{destroy_popup, get_popup};
 use cosmic::iced::window::Id;
@@ -14,8 +15,16 @@ pub struct CosmicAppletMusic {
     popup: Option<Id>,
     player_info: PlayerInfo,
     music_controller: MusicController,
+    config_manager: Option<ConfigManager>,
     album_art_handle: Option<cosmic::iced::widget::image::Handle>,
     current_art_url: Option<String>,
+    active_tab: PopupTab,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PopupTab {
+    Controls,
+    Settings,
 }
 
 impl Default for CosmicAppletMusic {
@@ -25,8 +34,10 @@ impl Default for CosmicAppletMusic {
             popup: None,
             player_info: PlayerInfo::default(),
             music_controller: MusicController::new(),
+            config_manager: None,
             album_art_handle: None,
             current_art_url: None,
+            active_tab: PopupTab::Controls,
         }
     }
 }
@@ -35,6 +46,7 @@ impl Default for CosmicAppletMusic {
 pub enum Message {
     TogglePopup,
     PopupClosed(Id),
+    SwitchTab(PopupTab),
     PlayPause,
     Next,
     Previous,
@@ -47,6 +59,10 @@ pub enum Message {
     MiddleClick,
     LoadAlbumArt(String),
     AlbumArtLoaded(Option<cosmic::iced::widget::image::Handle>),
+    DiscoverPlayers,
+    TogglePlayerEnabled(String, bool),
+    ToggleAutoDetect(bool),
+    SelectPlayer(Option<String>),
 }
 
 impl Application for CosmicAppletMusic {
@@ -68,12 +84,18 @@ impl Application for CosmicAppletMusic {
     }
 
     fn init(core: Core, _flags: Self::Flags) -> (Self, Task<Self::Message>) {
+        let config_manager = ConfigManager::new().ok();
         let app = CosmicAppletMusic {
             core,
             music_controller: MusicController::new(),
+            config_manager,
+            active_tab: PopupTab::Controls,
             ..Default::default()
         };
-        (app, Task::done(cosmic::Action::App(Message::FindPlayer)))
+        (app, Task::batch([
+            Task::done(cosmic::Action::App(Message::DiscoverPlayers)),
+            Task::done(cosmic::Action::App(Message::FindPlayer))
+        ]))
     }
 
     fn on_close_requested(&self, id: Id) -> Option<Message> {
@@ -92,6 +114,7 @@ impl Application for CosmicAppletMusic {
         match message {
             Message::TogglePopup => self.handle_toggle_popup(),
             Message::PopupClosed(id) => self.handle_popup_closed(id),
+            Message::SwitchTab(tab) => self.handle_switch_tab(tab),
             Message::PlayPause => self.handle_play_pause(),
             Message::Next => self.handle_next(),
             Message::Previous => self.handle_previous(),
@@ -104,6 +127,10 @@ impl Application for CosmicAppletMusic {
             Message::MiddleClick => self.handle_play_pause(),
             Message::LoadAlbumArt(url) => self.handle_load_album_art(url),
             Message::AlbumArtLoaded(handle) => self.handle_album_art_loaded(handle),
+            Message::DiscoverPlayers => self.handle_discover_players(),
+            Message::TogglePlayerEnabled(player, enabled) => self.handle_toggle_player_enabled(player, enabled),
+            Message::ToggleAutoDetect(enabled) => self.handle_toggle_auto_detect(enabled),
+            Message::SelectPlayer(player) => self.handle_select_player(player),
         }
     }
 
@@ -138,7 +165,14 @@ impl CosmicAppletMusic {
     fn handle_popup_closed(&mut self, id: Id) -> Task<Message> {
         if self.popup.as_ref() == Some(&id) {
             self.popup = None;
+            // Reset to controls tab when popup closes
+            self.active_tab = PopupTab::Controls;
         }
+        Task::none()
+    }
+
+    fn handle_switch_tab(&mut self, tab: PopupTab) -> Task<Message> {
+        self.active_tab = tab;
         Task::none()
     }
 
@@ -193,7 +227,17 @@ impl CosmicAppletMusic {
     }
 
     fn handle_find_player(&mut self) -> Task<Message> {
-        let _ = self.music_controller.find_active_player();
+        if let Some(ref config) = self.config_manager {
+            // Use new selected player approach
+            if let Some(selected_player) = config.get_selected_player() {
+                let _ = self.music_controller.find_specific_player(&selected_player);
+            } else {
+                // No player selected - try to find any active player for backward compatibility
+                let _ = self.music_controller.find_active_player();
+            }
+        } else {
+            let _ = self.music_controller.find_active_player();
+        }
         let info = self.music_controller.get_player_info();
         Task::done(cosmic::Action::App(Message::UpdatePlayerInfo(info)))
     }
@@ -229,5 +273,42 @@ impl CosmicAppletMusic {
     fn handle_album_art_loaded(&mut self, handle: Option<cosmic::iced::widget::image::Handle>) -> Task<Message> {
         self.album_art_handle = handle;
         Task::none()
+    }
+
+
+    fn handle_discover_players(&mut self) -> Task<Message> {
+        let _ = self.music_controller.discover_all_players();
+
+        // Auto-add discovered players to config if auto-detect is enabled
+        if let Some(ref mut config) = self.config_manager {
+            let discovered = self.music_controller.get_discovered_players();
+            for player in discovered {
+                let _ = config.add_discovered_player(player.identity);
+            }
+        }
+
+        Task::none()
+    }
+
+    fn handle_toggle_player_enabled(&mut self, player_name: String, enabled: bool) -> Task<Message> {
+        if let Some(ref mut config) = self.config_manager {
+            let _ = config.set_player_enabled(player_name, enabled);
+        }
+        Task::done(cosmic::Action::App(Message::FindPlayer))
+    }
+
+    fn handle_toggle_auto_detect(&mut self, enabled: bool) -> Task<Message> {
+        if let Some(ref mut config) = self.config_manager {
+            let _ = config.set_auto_detect_new_players(enabled);
+        }
+        Task::none()
+    }
+
+
+    fn handle_select_player(&mut self, player: Option<String>) -> Task<Message> {
+        if let Some(ref mut config) = self.config_manager {
+            let _ = config.set_selected_player(player);
+        }
+        Task::done(cosmic::Action::App(Message::FindPlayer))
     }
 }
