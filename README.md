@@ -67,12 +67,17 @@ This will build and install the latest development version directly from Git.
    cd cosmic-applet-music-player
    ```
 
-2. **Build the applet**:
+2. **Install Just build tool** (if not already installed):
+   ```bash
+   cargo install just
+   ```
+
+3. **Build the applet**:
    ```bash
    just build-release
    ```
 
-3. **Install system-wide**:
+4. **Install system-wide**:
    ```bash
    sudo just install
    ```
@@ -81,8 +86,9 @@ This will build and install the latest development version directly from Git.
 
 - Rust 1.80+
 - COSMIC desktop environment
-- Just build tool
+- Just build tool (`cargo install just`)
 - Git (for cloning)
+- System development packages (see Building Requirements below)
 
 ## Development
 
@@ -94,6 +100,12 @@ just build-debug
 
 # Run with debug logging
 just run
+
+# Format code and run
+just dev
+
+# Run clippy linting
+just check
 
 # Clean build artifacts
 just clean
@@ -157,16 +169,27 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 
 The following system packages are required for building:
 
-- `libdbus-1-dev` (for MPRIS communication)
+- `libdbus-1-dev` (for MPRIS D-Bus communication via mpris crate)
 - `pkg-config` (for dependency detection)
-- `libssl-dev` (for HTTPS requests)
+- `libssl-dev` (for HTTPS requests via reqwest crate for album artwork)
+- `build-essential` or equivalent (C compiler for native dependencies)
 
-Install on Ubuntu/Debian:
+### Ubuntu/Debian:
 ```bash
-sudo apt install libdbus-1-dev pkg-config libssl-dev
+sudo apt install libdbus-1-dev pkg-config libssl-dev build-essential
 ```
 
-Install on Fedora:
+### Fedora/RHEL:
 ```bash
-sudo dnf install dbus-devel pkgconfig openssl-devel
+sudo dnf install dbus-devel pkgconfig openssl-devel gcc
+```
+
+### Arch Linux:
+```bash
+sudo pacman -S dbus pkg-config openssl base-devel
+```
+
+### openSUSE:
+```bash
+sudo zypper install dbus-1-devel pkg-config libopenssl-devel gcc
 ```
