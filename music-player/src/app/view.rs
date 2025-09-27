@@ -14,6 +14,7 @@ pub mod view_window;
 
 static AUTOSIZE_MAIN_ID: LazyLock<Id> = LazyLock::new(|| Id::new("autosize-main"));
 
+#[allow(dead_code)]
 pub enum AppIcon {
     Playing,
     Paused,
@@ -32,7 +33,7 @@ impl AppIcon {
     }
 }
 
-pub fn view(app: &CosmicAppletMusic) -> Element<Message> {
+pub fn view(app: &CosmicAppletMusic) -> Element<'_, Message> {
     let icon = match app.player_info.status {
         PlaybackStatus::Playing => AppIcon::Paused,  // Show pause when playing
         PlaybackStatus::Paused => AppIcon::Playing,  // Show play when paused
@@ -72,6 +73,7 @@ pub fn view(app: &CosmicAppletMusic) -> Element<Message> {
     .into()
 }
 
+#[allow(dead_code)]
 pub fn applet_icon(core: &Core, icon_type: AppIcon) -> cosmic::widget::Icon {
     // Hardcode to symbolic = true.
     let suggested = core.applet.suggested_size(true);
@@ -90,6 +92,7 @@ pub fn applet_icon(core: &Core, icon_type: AppIcon) -> cosmic::widget::Icon {
         .height(Length::Fixed(suggested.1 as f32))
 }
 
+#[allow(dead_code)]
 pub fn applet_button_with_text<'a, Message: 'static + Clone>(
     core: &Core,
     icon: AppIcon,

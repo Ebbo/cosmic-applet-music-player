@@ -80,11 +80,11 @@ impl Application for CosmicAppletMusic {
         Some(Message::PopupClosed(id))
     }
 
-    fn view(&self) -> Element<Self::Message> {
+    fn view(&self) -> Element<'_, Self::Message> {
         view::view(self)
     }
 
-    fn view_window(&self, id: Id) -> Element<Self::Message> {
+    fn view_window(&self, id: Id) -> Element<'_, Self::Message> {
         view::view_window::view_window(self, id)
     }
 
@@ -170,7 +170,7 @@ impl CosmicAppletMusic {
     fn handle_update_player_info(&mut self, info: PlayerInfo) -> Task<Message> {
         // Check if album art URL changed
         let should_load_art = match (&self.current_art_url, &info.art_url) {
-            (None, Some(new_url)) => true,
+            (None, Some(_new_url)) => true,
             (Some(old_url), Some(new_url)) => old_url != new_url,
             (Some(_), None) => {
                 self.album_art_handle = None;

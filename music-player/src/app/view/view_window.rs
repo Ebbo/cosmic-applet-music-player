@@ -2,7 +2,7 @@ use crate::app::{CosmicAppletMusic, Message};
 use cosmic::{theme, Element};
 use mpris::PlaybackStatus;
 
-pub fn view_window(app: &CosmicAppletMusic, _id: cosmic::iced::window::Id) -> Element<Message> {
+pub fn view_window(app: &CosmicAppletMusic, _id: cosmic::iced::window::Id) -> Element<'_, Message> {
     let cosmic::cosmic_theme::Spacing { space_s, space_m, .. } = theme::active().cosmic().spacing;
 
     // Album cover
