@@ -60,7 +60,6 @@ pub enum Message {
     LoadAlbumArt(String),
     AlbumArtLoaded(Option<cosmic::iced::widget::image::Handle>),
     DiscoverPlayers,
-    TogglePlayerEnabled(String, bool),
     ToggleAutoDetect(bool),
     SelectPlayer(Option<String>),
 }
@@ -128,7 +127,6 @@ impl Application for CosmicAppletMusic {
             Message::LoadAlbumArt(url) => self.handle_load_album_art(url),
             Message::AlbumArtLoaded(handle) => self.handle_album_art_loaded(handle),
             Message::DiscoverPlayers => self.handle_discover_players(),
-            Message::TogglePlayerEnabled(player, enabled) => self.handle_toggle_player_enabled(player, enabled),
             Message::ToggleAutoDetect(enabled) => self.handle_toggle_auto_detect(enabled),
             Message::SelectPlayer(player) => self.handle_select_player(player),
         }
@@ -290,12 +288,6 @@ impl CosmicAppletMusic {
         Task::none()
     }
 
-    fn handle_toggle_player_enabled(&mut self, player_name: String, enabled: bool) -> Task<Message> {
-        if let Some(ref mut config) = self.config_manager {
-            let _ = config.set_player_enabled(player_name, enabled);
-        }
-        Task::done(cosmic::Action::App(Message::FindPlayer))
-    }
 
     fn handle_toggle_auto_detect(&mut self, enabled: bool) -> Task<Message> {
         if let Some(ref mut config) = self.config_manager {

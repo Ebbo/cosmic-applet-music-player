@@ -3,13 +3,23 @@
 A modern music player applet for the COSMIC desktop environment with MPRIS integration, providing seamless control of your music directly from the panel.
 
 ## Screenshots
-<img src="MusicPlayer.png" alt="MusicPlayer">
 
-The applet displays as a music icon in the COSMIC panel. Click it to open the control popup featuring:
-- Album artwork (left side)
-- Song title and artist information (right side)
+### Main Controls Tab
+<img src="Music_Player_Applet_Controls.png" alt="Controls Tab">
+
+The main controls interface provides:
+- Album artwork display
+- Song title and artist information
 - Media control buttons (previous, play/pause, next)
 - Volume control slider
+
+### Settings Tab
+<img src="Music_Player_Applet_Settings.png" alt="Settings Tab">
+
+The settings interface allows you to:
+- Discover available media players
+- Select which player to control
+- Enable/disable auto-detection of new players
 
 ## Features
 
@@ -31,6 +41,7 @@ The applet displays as a music icon in the COSMIC panel. Click it to open the co
 - **Mouse Scroll**: Scroll up/down over the applet icon for next/previous track
 - **Middle Click**: Middle-click the applet icon to play/pause
 - **Panel Integration**: Compact icon in the panel, detailed controls in popup
+- **Tabbed Interface**: Switch between Controls and Settings tabs in the popup
 
 ### 🔌 **MPRIS Compatibility**
 Works with any MPRIS-compatible music player, including:
@@ -40,6 +51,11 @@ Works with any MPRIS-compatible music player, including:
 - Clementine
 - MPD clients
 - And many more!
+
+### ⚙️ **Player Management**
+- **Auto-Discovery**: Automatically finds available media players
+- **Player Selection**: Choose which specific player to control via Settings tab
+- **Smart Detection**: Shows which players are currently active/playing
 
 ## Installation
 
@@ -113,16 +129,51 @@ just clean
 
 ## Usage
 
-1. **Launch**: The applet will appear in your COSMIC panel after installation
-2. **Basic Control**: Click the music icon to open the control popup
-3. **Quick Actions**:
+### Adding the Applet to COSMIC Panel
+
+After installation, you need to add the Music Player applet to your COSMIC panel:
+
+1. **Open COSMIC Settings**
+2. **Navigate to Desktop → Panel → Configure panel applets**
+3. **Find "Music Player" in the available applets list**
+4. **Click to add it to your panel**
+
+The applet will now appear as a music icon in your COSMIC panel.
+
+### Using the Applet
+
+1. **Basic Control**: Click the music icon to open the control popup
+2. **Controls Tab**:
+   - View album artwork and song information
+   - Use media control buttons (previous, play/pause, next)
+   - Adjust volume with the precision slider
+3. **Settings Tab**:
+   - Click "Discover Players" to find available media players
+   - Select which player to control from the radio button list
+   - Enable/disable auto-detection of new players
+4. **Quick Actions**:
    - Scroll up/down over the icon for track navigation
    - Middle-click for play/pause
-4. **Volume**: Use the slider in the popup for precise volume control
 
 ## Configuration
 
-The applet automatically detects and connects to MPRIS-compatible music players. No additional configuration is required.
+### Player Selection
+
+The applet provides flexible player management through the Settings tab:
+
+1. **Auto-Discovery**: Click "Discover Players" to scan for available MPRIS-compatible players
+2. **Player Selection**: Use the radio buttons to choose which player to control:
+   - **None**: Disables all player control
+   - **Specific Player**: Select a discovered player from the list
+   - **Active players** are marked with ♪ symbol
+3. **Auto-Detection**: Enable to automatically detect new players when they start
+
+### Configuration Files
+
+The applet stores its configuration in:
+- `~/.config/cosmic/com.cosmic.MusicPlayer/`
+
+No manual configuration editing is typically required.
 
 ## Supported Players
 
@@ -151,10 +202,20 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 
 ## Troubleshooting
 
-### Applet not showing music info
-- Ensure your music player supports MPRIS
-- Check that the player is actually playing music
-- Restart the music player and the applet
+### Applet not appearing in panel
+- Ensure the applet is properly installed: `which music-player` should return a path
+- Try restarting COSMIC or logging out/in
+- Check COSMIC Settings → Desktop → Panel → Configure panel applets
+
+### No players showing in Settings
+- Click "Discover Players" to scan for available players
+- Ensure your music player is running and supports MPRIS
+- Try restarting your music player
+
+### Applet not controlling music
+- Check that the correct player is selected in Settings tab
+- Ensure the selected player is currently running
+- Some players may need to be playing music before they appear
 
 ### No album artwork
 - Album artwork depends on the music player providing image URLs
@@ -164,6 +225,10 @@ Contributions are welcome! Please feel free to submit pull requests or open issu
 ### Mouse shortcuts not working
 - Ensure you're hovering directly over the applet icon
 - Check that no other application is intercepting mouse events
+
+### Settings not saving
+- Check file permissions in `~/.config/cosmic/`
+- Ensure the directory exists and is writable
 
 ## Building Requirements
 

@@ -10,13 +10,11 @@ pub struct PlayerInfo {
     pub status: PlaybackStatus,
     pub volume: f64,
     pub art_url: Option<String>,
-    pub player_name: Option<String>,
 }
 
 #[derive(Debug, Clone)]
 pub struct DiscoveredPlayer {
     pub identity: String,
-    pub bus_name: String,
     pub is_active: bool,
 }
 
@@ -28,7 +26,6 @@ impl Default for PlayerInfo {
             status: PlaybackStatus::Stopped,
             volume: 0.5,
             art_url: None,
-            player_name: None,
         }
     }
 }
@@ -57,12 +54,10 @@ impl MusicController {
             if let Ok(players) = player_finder.find_all() {
                 for player in players {
                     let identity = player.identity();
-                    let bus_name = format!("org.mpris.MediaPlayer2.{}", identity);
                     let is_active = player.get_playback_status().unwrap_or(PlaybackStatus::Stopped) == PlaybackStatus::Playing;
 
                     discovered_lock.insert(identity.to_string(), DiscoveredPlayer {
                         identity: identity.to_string(),
-                        bus_name,
                         is_active,
                     });
                 }
@@ -85,29 +80,6 @@ impl MusicController {
         Ok(())
     }
 
-    pub fn find_enabled_player(&mut self, enabled_players: &std::collections::HashSet<String>) -> Result<()> {
-        let player_finder = PlayerFinder::new()?;
-
-        // If no specific players are enabled, use the default behavior
-        if enabled_players.is_empty() {
-            return self.find_active_player();
-        }
-
-        // Try to find all players and pick the first enabled one that's active
-        if let Ok(players) = player_finder.find_all() {
-            for player in players {
-                let identity = player.identity();
-                if enabled_players.contains(identity) {
-                    if let Ok(mut player_lock) = self.player.lock() {
-                        *player_lock = Some(player);
-                        return Ok(());
-                    }
-                }
-            }
-        }
-
-        Ok(())
-    }
 
     pub fn find_specific_player(&mut self, player_name: &str) -> Result<()> {
         let player_finder = PlayerFinder::new()?;
@@ -154,7 +126,6 @@ impl MusicController {
         let metadata = player.get_metadata().unwrap_or_default();
         let status = player.get_playback_status().unwrap_or(PlaybackStatus::Stopped);
         let volume = player.get_volume().unwrap_or(0.5);
-        let player_name = Some(player.identity().to_string());
 
         let title = metadata
             .title()
@@ -174,7 +145,6 @@ impl MusicController {
             status,
             volume,
             art_url,
-            player_name,
         }
     }
 

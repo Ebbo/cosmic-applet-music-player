@@ -41,22 +41,6 @@ impl ConfigManager {
         Ok(Self { config, app_config })
     }
 
-    pub fn get_enabled_players(&self) -> &HashSet<String> {
-        &self.app_config.enabled_players
-    }
-
-    pub fn is_player_enabled(&self, player_name: &str) -> bool {
-        // With radio button behavior, check if this is the selected player
-        if let Some(ref selected) = self.app_config.selected_player {
-            return selected == player_name;
-        }
-
-        // Fallback for backward compatibility
-        if self.app_config.auto_detect_new_players && self.app_config.enabled_players.is_empty() {
-            return true;
-        }
-        self.app_config.enabled_players.contains(player_name)
-    }
 
     pub fn get_selected_player(&self) -> Option<String> {
         self.app_config.selected_player.clone()
@@ -67,14 +51,6 @@ impl ConfigManager {
         self.save_config()
     }
 
-    pub fn set_player_enabled(&mut self, player_name: String, enabled: bool) -> anyhow::Result<()> {
-        if enabled {
-            self.app_config.enabled_players.insert(player_name);
-        } else {
-            self.app_config.enabled_players.remove(&player_name);
-        }
-        self.save_config()
-    }
 
     pub fn get_auto_detect_new_players(&self) -> bool {
         self.app_config.auto_detect_new_players
