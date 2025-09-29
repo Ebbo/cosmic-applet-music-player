@@ -1,5 +1,5 @@
-use crate::music::{MusicController, PlayerInfo};
 use crate::config::ConfigManager;
+use crate::music::{MusicController, PlayerInfo};
 use cosmic::app::{Core, Task};
 use cosmic::iced::platform_specific::shell::wayland::commands::popup::{destroy_popup, get_popup};
 use cosmic::iced::window::Id;
@@ -91,10 +91,13 @@ impl Application for CosmicAppletMusic {
             active_tab: PopupTab::Controls,
             ..Default::default()
         };
-        (app, Task::batch([
-            Task::done(cosmic::Action::App(Message::DiscoverPlayers)),
-            Task::done(cosmic::Action::App(Message::FindPlayer))
-        ]))
+        (
+            app,
+            Task::batch([
+                Task::done(cosmic::Action::App(Message::DiscoverPlayers)),
+                Task::done(cosmic::Action::App(Message::FindPlayer)),
+            ]),
+        )
     }
 
     fn on_close_requested(&self, id: Id) -> Option<Message> {
@@ -185,7 +188,7 @@ impl CosmicAppletMusic {
 
         Task::batch([
             Task::done(cosmic::Action::App(Message::UpdateStatus(new_status))),
-            Task::done(cosmic::Action::App(Message::FindPlayer))
+            Task::done(cosmic::Action::App(Message::FindPlayer)),
         ])
     }
 
@@ -252,27 +255,30 @@ impl CosmicAppletMusic {
     }
 
     fn handle_load_album_art(&mut self, url: String) -> Task<Message> {
-        Task::perform(async move {
-            match reqwest::get(&url).await {
-                Ok(response) => {
-                    match response.bytes().await {
+        Task::perform(
+            async move {
+                match reqwest::get(&url).await {
+                    Ok(response) => match response.bytes().await {
                         Ok(bytes) => {
                             let handle = cosmic::iced::widget::image::Handle::from_bytes(bytes);
                             Some(handle)
                         }
                         Err(_) => None,
-                    }
+                    },
+                    Err(_) => None,
                 }
-                Err(_) => None,
-            }
-        }, |result| cosmic::Action::App(Message::AlbumArtLoaded(result)))
+            },
+            |result| cosmic::Action::App(Message::AlbumArtLoaded(result)),
+        )
     }
 
-    fn handle_album_art_loaded(&mut self, handle: Option<cosmic::iced::widget::image::Handle>) -> Task<Message> {
+    fn handle_album_art_loaded(
+        &mut self,
+        handle: Option<cosmic::iced::widget::image::Handle>,
+    ) -> Task<Message> {
         self.album_art_handle = handle;
         Task::none()
     }
-
 
     fn handle_discover_players(&mut self) -> Task<Message> {
         let _ = self.music_controller.discover_all_players();
@@ -288,14 +294,12 @@ impl CosmicAppletMusic {
         Task::none()
     }
 
-
     fn handle_toggle_auto_detect(&mut self, enabled: bool) -> Task<Message> {
         if let Some(ref mut config) = self.config_manager {
             let _ = config.set_auto_detect_new_players(enabled);
         }
         Task::none()
     }
-
 
     fn handle_select_player(&mut self, player: Option<String>) -> Task<Message> {
         if let Some(ref mut config) = self.config_manager {

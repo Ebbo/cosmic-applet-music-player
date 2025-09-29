@@ -3,8 +3,8 @@
 /// The `app` module is used by convention to indicate the main component of our
 /// application.
 mod app;
-mod music;
 mod config;
+mod music;
 
 use app::CosmicAppletMusic;
 

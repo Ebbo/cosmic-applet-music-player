@@ -41,7 +41,6 @@ impl ConfigManager {
         Ok(Self { config, app_config })
     }
 
-
     pub fn get_selected_player(&self) -> Option<String> {
         self.app_config.selected_player.clone()
     }
@@ -50,7 +49,6 @@ impl ConfigManager {
         self.app_config.selected_player = player;
         self.save_config()
     }
-
 
     pub fn get_auto_detect_new_players(&self) -> bool {
         self.app_config.auto_detect_new_players

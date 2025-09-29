@@ -3,7 +3,9 @@ use cosmic::{theme, Element};
 use mpris::PlaybackStatus;
 
 pub fn view_window(app: &CosmicAppletMusic, _id: cosmic::iced::window::Id) -> Element<'_, Message> {
-    let cosmic::cosmic_theme::Spacing { space_s, space_m, .. } = theme::active().cosmic().spacing;
+    let cosmic::cosmic_theme::Spacing {
+        space_s, space_m, ..
+    } = theme::active().cosmic().spacing;
 
     // Tab bar with proper alignment
     let controls_button = cosmic::widget::button::text(if app.active_tab == PopupTab::Controls {
@@ -25,7 +27,7 @@ pub fn view_window(app: &CosmicAppletMusic, _id: cosmic::iced::window::Id) -> El
         .push(controls_button)
         .push(
             cosmic::widget::container(cosmic::widget::horizontal_space())
-                .width(cosmic::iced::Length::Fill)
+                .width(cosmic::iced::Length::Fill),
         )
         .push(settings_button);
 
@@ -57,7 +59,9 @@ pub fn view_window(app: &CosmicAppletMusic, _id: cosmic::iced::window::Id) -> El
 
 fn view_controls_tab(app: &CosmicAppletMusic, space_s: f32, space_m: f32) -> Element<'_, Message> {
     // Check if no player is selected
-    let no_player_selected = app.config_manager.as_ref()
+    let no_player_selected = app
+        .config_manager
+        .as_ref()
         .and_then(|config| config.get_selected_player())
         .is_none();
 
@@ -65,17 +69,12 @@ fn view_controls_tab(app: &CosmicAppletMusic, space_s: f32, space_m: f32) -> Ele
         return cosmic::widget::container(
             cosmic::widget::column()
                 .spacing(space_s)
-                .push(
-                    cosmic::widget::icon::from_name("audio-headphones-symbolic")
-                        .size(48)
-                )
-                .push(
-                    cosmic::widget::text::body("No player selected")
-                )
-                .push(
-                    cosmic::widget::text::caption("Go to Settings tab to select a media player")
-                )
-                .align_x(cosmic::iced::Alignment::Center)
+                .push(cosmic::widget::icon::from_name("audio-headphones-symbolic").size(48))
+                .push(cosmic::widget::text::body("No player selected"))
+                .push(cosmic::widget::text::caption(
+                    "Go to Settings tab to select a media player",
+                ))
+                .align_x(cosmic::iced::Alignment::Center),
         )
         .width(cosmic::iced::Length::Fill)
         .height(cosmic::iced::Length::Fixed(200.0))
@@ -90,7 +89,7 @@ fn view_controls_tab(app: &CosmicAppletMusic, space_s: f32, space_m: f32) -> Ele
             cosmic::widget::image(handle.clone())
                 .width(cosmic::iced::Length::Fixed(80.0))
                 .height(cosmic::iced::Length::Fixed(80.0))
-                .content_fit(cosmic::iced::ContentFit::Cover)
+                .content_fit(cosmic::iced::ContentFit::Cover),
         )
         .width(cosmic::iced::Length::Fixed(80.0))
         .height(cosmic::iced::Length::Fixed(80.0))
@@ -102,7 +101,7 @@ fn view_controls_tab(app: &CosmicAppletMusic, space_s: f32, space_m: f32) -> Ele
                 .push(cosmic::widget::icon::from_name("image-loading-symbolic").size(32))
                 .push(cosmic::widget::text::caption("Loading...").size(10))
                 .spacing(4)
-                .align_x(cosmic::iced::Alignment::Center)
+                .align_x(cosmic::iced::Alignment::Center),
         )
         .width(cosmic::iced::Length::Fixed(80.0))
         .height(cosmic::iced::Length::Fixed(80.0))
@@ -112,8 +111,7 @@ fn view_controls_tab(app: &CosmicAppletMusic, space_s: f32, space_m: f32) -> Ele
     } else {
         // No art available
         cosmic::widget::container(
-            cosmic::widget::icon::from_name("audio-headphones-symbolic")
-                .size(48)
+            cosmic::widget::icon::from_name("audio-headphones-symbolic").size(48),
         )
         .width(cosmic::iced::Length::Fixed(80.0))
         .height(cosmic::iced::Length::Fixed(80.0))
@@ -124,12 +122,8 @@ fn view_controls_tab(app: &CosmicAppletMusic, space_s: f32, space_m: f32) -> Ele
 
     let song_info = cosmic::widget::column()
         .spacing(space_s)
-        .push(
-            cosmic::widget::text::title4(&app.player_info.title)
-        )
-        .push(
-            cosmic::widget::text::body(&app.player_info.artist)
-        );
+        .push(cosmic::widget::text::title4(&app.player_info.title))
+        .push(cosmic::widget::text::body(&app.player_info.artist));
 
     let info_row = cosmic::widget::row()
         .spacing(space_m)
@@ -138,65 +132,53 @@ fn view_controls_tab(app: &CosmicAppletMusic, space_s: f32, space_m: f32) -> Ele
         .align_y(cosmic::iced::Alignment::Center);
 
     let status_icon = match app.player_info.status {
-        PlaybackStatus::Playing => "media-playback-pause-symbolic",  // Show pause when playing
-        PlaybackStatus::Paused => "media-playback-start-symbolic",   // Show play when paused
-        PlaybackStatus::Stopped => "media-playback-start-symbolic",  // Show play when stopped
+        PlaybackStatus::Playing => "media-playback-pause-symbolic", // Show pause when playing
+        PlaybackStatus::Paused => "media-playback-start-symbolic",  // Show play when paused
+        PlaybackStatus::Stopped => "media-playback-start-symbolic", // Show play when stopped
     };
 
     let controls = cosmic::widget::row()
         .spacing(space_m)
         .push(
-            cosmic::widget::button::icon(
-                cosmic::widget::icon::from_name("media-skip-backward-symbolic")
-            )
-            .on_press(Message::Previous)
+            cosmic::widget::button::icon(cosmic::widget::icon::from_name(
+                "media-skip-backward-symbolic",
+            ))
+            .on_press(Message::Previous),
         )
         .push(
-            cosmic::widget::button::icon(
-                cosmic::widget::icon::from_name(status_icon)
-            )
-            .on_press(Message::PlayPause)
+            cosmic::widget::button::icon(cosmic::widget::icon::from_name(status_icon))
+                .on_press(Message::PlayPause),
         )
         .push(
-            cosmic::widget::button::icon(
-                cosmic::widget::icon::from_name("media-skip-forward-symbolic")
-            )
-            .on_press(Message::Next)
+            cosmic::widget::button::icon(cosmic::widget::icon::from_name(
+                "media-skip-forward-symbolic",
+            ))
+            .on_press(Message::Next),
         )
         .align_y(cosmic::iced::Alignment::Center);
 
     // Volume control
     let volume_row = cosmic::widget::row()
         .spacing(space_s)
-        .push(
-            cosmic::widget::icon::from_name("audio-volume-low-symbolic")
-                .size(16)
-        )
+        .push(cosmic::widget::icon::from_name("audio-volume-low-symbolic").size(16))
         .push(
             cosmic::widget::slider(0.0..=1.0, app.player_info.volume, Message::VolumeChanged)
                 .step(0.01)
-                .width(cosmic::iced::Length::Fill)
+                .width(cosmic::iced::Length::Fill),
         )
-        .push(
-            cosmic::widget::icon::from_name("audio-volume-high-symbolic")
-                .size(16)
-        )
+        .push(cosmic::widget::icon::from_name("audio-volume-high-symbolic").size(16))
         .align_y(cosmic::iced::Alignment::Center);
 
     cosmic::widget::column()
         .spacing(space_m)
         .push(info_row)
-        .push(
-            cosmic::widget::divider::horizontal::default()
-        )
+        .push(cosmic::widget::divider::horizontal::default())
         .push(
             cosmic::widget::container(controls)
                 .align_x(cosmic::iced::alignment::Horizontal::Center)
-                .width(cosmic::iced::Length::Fill)
+                .width(cosmic::iced::Length::Fill),
         )
-        .push(
-            cosmic::widget::divider::horizontal::default()
-        )
+        .push(cosmic::widget::divider::horizontal::default())
         .push(volume_row)
         .into()
 }
@@ -205,18 +187,15 @@ fn view_settings_tab(app: &CosmicAppletMusic, _space_s: f32, space_m: f32) -> El
     // Get discovered players
     let discovered_players = app.music_controller.get_discovered_players();
 
-    let mut settings_content = cosmic::widget::column()
-        .spacing(space_m);
+    let mut settings_content = cosmic::widget::column().spacing(space_m);
 
     // Auto-detect section
     if let Some(ref config) = app.config_manager {
         let auto_detect_enabled = config.get_auto_detect_new_players();
 
-        let auto_detect_checkbox = cosmic::widget::checkbox(
-            "Auto-detect new players",
-            auto_detect_enabled
-        )
-        .on_toggle(Message::ToggleAutoDetect);
+        let auto_detect_checkbox =
+            cosmic::widget::checkbox("Auto-detect new players", auto_detect_enabled)
+                .on_toggle(Message::ToggleAutoDetect);
 
         settings_content = settings_content.push(auto_detect_checkbox);
     }
@@ -229,13 +208,11 @@ fn view_settings_tab(app: &CosmicAppletMusic, _space_s: f32, space_m: f32) -> El
     settings_content = settings_content.push(discover_button);
 
     // Player selection section
-    settings_content = settings_content.push(
-        cosmic::widget::text::title4("Player Selection")
-    );
+    settings_content = settings_content.push(cosmic::widget::text::title4("Player Selection"));
 
-    settings_content = settings_content.push(
-        cosmic::widget::text::caption("Choose which media player to control:")
-    );
+    settings_content = settings_content.push(cosmic::widget::text::caption(
+        "Choose which media player to control:",
+    ));
 
     // Get currently selected player
     let current_selected = if let Some(ref config) = app.config_manager {
@@ -244,23 +221,34 @@ fn view_settings_tab(app: &CosmicAppletMusic, _space_s: f32, space_m: f32) -> El
         None
     };
 
-    let selected_index = current_selected.as_ref()
-        .and_then(|selected| discovered_players.iter().position(|p| &p.identity == selected))
+    let selected_index = current_selected
+        .as_ref()
+        .and_then(|selected| {
+            discovered_players
+                .iter()
+                .position(|p| &p.identity == selected)
+        })
         .map(|idx| idx + 1)
-        .or(if current_selected.is_none() { Some(0) } else { None });
+        .or(if current_selected.is_none() {
+            Some(0)
+        } else {
+            None
+        });
 
     // "None" option to disable all players
-    let none_radio = cosmic::widget::radio(
-        "None (disable all players)",
-        0usize,
-        selected_index,
-        |_| Message::SelectPlayer(None)
-    );
+    let none_radio =
+        cosmic::widget::radio("None (disable all players)", 0usize, selected_index, |_| {
+            Message::SelectPlayer(None)
+        });
     settings_content = settings_content.push(none_radio);
 
     // Add radio buttons for each discovered player
     for (index, player) in discovered_players.iter().enumerate() {
-        let status_text = if player.is_active { " (♪ currently playing)" } else { "" };
+        let status_text = if player.is_active {
+            " (♪ currently playing)"
+        } else {
+            ""
+        };
         let radio_text = format!("{}{}", player.identity, status_text);
 
         let radio = cosmic::widget::radio(
@@ -270,15 +258,15 @@ fn view_settings_tab(app: &CosmicAppletMusic, _space_s: f32, space_m: f32) -> El
             {
                 let player_name = player.identity.clone();
                 move |_| Message::SelectPlayer(Some(player_name.clone()))
-            }
+            },
         );
         settings_content = settings_content.push(radio);
     }
 
     if discovered_players.is_empty() {
-        settings_content = settings_content.push(
-            cosmic::widget::text::caption("No players discovered yet. Click 'Discover Players' to search.")
-        );
+        settings_content = settings_content.push(cosmic::widget::text::caption(
+            "No players discovered yet. Click 'Discover Players' to search.",
+        ));
     }
 
     cosmic::widget::scrollable(settings_content).into()

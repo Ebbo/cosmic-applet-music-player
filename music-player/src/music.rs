@@ -1,7 +1,8 @@
 use anyhow::Result;
 use mpris::{PlaybackStatus, Player, PlayerFinder};
-use std::sync::{Arc, Mutex};
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct PlayerInfo {
@@ -32,35 +33,40 @@ impl Default for PlayerInfo {
 
 #[derive(Clone)]
 pub struct MusicController {
-    player: Arc<Mutex<Option<Player>>>,
-    discovered_players: Arc<Mutex<HashMap<String, DiscoveredPlayer>>>,
+    player: Rc<RefCell<Option<Player>>>,
+    discovered_players: Rc<RefCell<HashMap<String, DiscoveredPlayer>>>,
 }
 
 impl MusicController {
     pub fn new() -> Self {
         Self {
-            player: Arc::new(Mutex::new(None)),
-            discovered_players: Arc::new(Mutex::new(HashMap::new())),
+            player: Rc::new(RefCell::new(None)),
+            discovered_players: Rc::new(RefCell::new(HashMap::new())),
         }
     }
 
     pub fn discover_all_players(&mut self) -> Result<()> {
         let player_finder = PlayerFinder::new()?;
 
-        if let Ok(mut discovered_lock) = self.discovered_players.lock() {
-            discovered_lock.clear();
+        let mut discovered_borrow = self.discovered_players.borrow_mut();
+        discovered_borrow.clear();
 
-            // Try to get all players
-            if let Ok(players) = player_finder.find_all() {
-                for player in players {
-                    let identity = player.identity();
-                    let is_active = player.get_playback_status().unwrap_or(PlaybackStatus::Stopped) == PlaybackStatus::Playing;
+        // Try to get all players
+        if let Ok(players) = player_finder.find_all() {
+            for player in players {
+                let identity = player.identity();
+                let is_active = player
+                    .get_playback_status()
+                    .unwrap_or(PlaybackStatus::Stopped)
+                    == PlaybackStatus::Playing;
 
-                    discovered_lock.insert(identity.to_string(), DiscoveredPlayer {
+                discovered_borrow.insert(
+                    identity.to_string(),
+                    DiscoveredPlayer {
                         identity: identity.to_string(),
                         is_active,
-                    });
-                }
+                    },
+                );
             }
         }
 
@@ -72,14 +78,11 @@ impl MusicController {
 
         // Try to find the first available player
         if let Ok(player) = player_finder.find_active() {
-            if let Ok(mut player_lock) = self.player.lock() {
-                *player_lock = Some(player);
-            }
+            *self.player.borrow_mut() = Some(player);
         }
 
         Ok(())
     }
-
 
     pub fn find_specific_player(&mut self, player_name: &str) -> Result<()> {
         let player_finder = PlayerFinder::new()?;
@@ -89,42 +92,33 @@ impl MusicController {
             for player in players {
                 let identity = player.identity();
                 if identity == player_name {
-                    if let Ok(mut player_lock) = self.player.lock() {
-                        *player_lock = Some(player);
-                        return Ok(());
-                    }
+                    *self.player.borrow_mut() = Some(player);
+                    return Ok(());
                 }
             }
         }
 
         // Player not found, clear current player
-        if let Ok(mut player_lock) = self.player.lock() {
-            *player_lock = None;
-        }
+        *self.player.borrow_mut() = None;
 
         Ok(())
     }
 
     pub fn get_discovered_players(&self) -> Vec<DiscoveredPlayer> {
-        if let Ok(discovered_lock) = self.discovered_players.lock() {
-            discovered_lock.values().cloned().collect()
-        } else {
-            Vec::new()
-        }
+        self.discovered_players.borrow().values().cloned().collect()
     }
 
     pub fn get_player_info(&self) -> PlayerInfo {
-        let player_guard = match self.player.lock() {
-            Ok(guard) => guard,
-            Err(_) => return PlayerInfo::default(),
-        };
+        let player_borrow = self.player.borrow();
 
-        let Some(ref player) = *player_guard else {
+        let Some(ref player) = *player_borrow else {
             return PlayerInfo::default();
         };
 
         let metadata = player.get_metadata().unwrap_or_default();
-        let status = player.get_playback_status().unwrap_or(PlaybackStatus::Stopped);
+        let status = player
+            .get_playback_status()
+            .unwrap_or(PlaybackStatus::Stopped);
         let volume = player.get_volume().unwrap_or(0.5);
 
         let title = metadata
@@ -149,48 +143,36 @@ impl MusicController {
     }
 
     pub fn play_pause(&self) -> Result<()> {
-        let player_guard = match self.player.lock() {
-            Ok(guard) => guard,
-            Err(_) => return Ok(()),
-        };
+        let player_borrow = self.player.borrow();
 
-        if let Some(ref player) = *player_guard {
+        if let Some(ref player) = *player_borrow {
             player.play_pause()?;
         }
         Ok(())
     }
 
     pub fn next(&self) -> Result<()> {
-        let player_guard = match self.player.lock() {
-            Ok(guard) => guard,
-            Err(_) => return Ok(()),
-        };
+        let player_borrow = self.player.borrow();
 
-        if let Some(ref player) = *player_guard {
+        if let Some(ref player) = *player_borrow {
             player.next()?;
         }
         Ok(())
     }
 
     pub fn previous(&self) -> Result<()> {
-        let player_guard = match self.player.lock() {
-            Ok(guard) => guard,
-            Err(_) => return Ok(()),
-        };
+        let player_borrow = self.player.borrow();
 
-        if let Some(ref player) = *player_guard {
+        if let Some(ref player) = *player_borrow {
             player.previous()?;
         }
         Ok(())
     }
 
     pub fn set_volume(&self, volume: f64) -> Result<()> {
-        let player_guard = match self.player.lock() {
-            Ok(guard) => guard,
-            Err(_) => return Ok(()),
-        };
+        let player_borrow = self.player.borrow();
 
-        if let Some(ref player) = *player_guard {
+        if let Some(ref player) = *player_borrow {
             player.set_volume(volume)?;
         }
         Ok(())
