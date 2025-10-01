@@ -19,6 +19,8 @@ pub struct CosmicAppletMusic {
     album_art_handle: Option<cosmic::iced::widget::image::Handle>,
     current_art_url: Option<String>,
     active_tab: PopupTab,
+    all_players_info: Vec<PlayerInfo>,
+    player_album_arts: std::collections::HashMap<String, cosmic::iced::widget::image::Handle>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -38,6 +40,8 @@ impl Default for CosmicAppletMusic {
             album_art_handle: None,
             current_art_url: None,
             active_tab: PopupTab::Controls,
+            all_players_info: Vec::new(),
+            player_album_arts: std::collections::HashMap::new(),
         }
     }
 }
@@ -62,6 +66,15 @@ pub enum Message {
     DiscoverPlayers,
     ToggleAutoDetect(bool),
     SelectPlayer(Option<String>),
+    UpdateAllPlayersInfo(Vec<PlayerInfo>),
+    PlayPausePlayer(String),
+    NextPlayer(String),
+    PreviousPlayer(String),
+    VolumeChangedPlayer(String, f64),
+    LoadAlbumArtPlayer(String, String),
+    AlbumArtLoadedPlayer(String, Option<cosmic::iced::widget::image::Handle>),
+    ToggleShowAllPlayers(bool),
+    ToggleHideInactive(bool),
 }
 
 impl Application for CosmicAppletMusic {
@@ -132,6 +145,21 @@ impl Application for CosmicAppletMusic {
             Message::DiscoverPlayers => self.handle_discover_players(),
             Message::ToggleAutoDetect(enabled) => self.handle_toggle_auto_detect(enabled),
             Message::SelectPlayer(player) => self.handle_select_player(player),
+            Message::UpdateAllPlayersInfo(info) => self.handle_update_all_players_info(info),
+            Message::PlayPausePlayer(bus_name) => self.handle_play_pause_player(bus_name),
+            Message::NextPlayer(bus_name) => self.handle_next_player(bus_name),
+            Message::PreviousPlayer(bus_name) => self.handle_previous_player(bus_name),
+            Message::VolumeChangedPlayer(bus_name, volume) => {
+                self.handle_volume_changed_player(bus_name, volume)
+            }
+            Message::LoadAlbumArtPlayer(bus_name, url) => {
+                self.handle_load_album_art_player(bus_name, url)
+            }
+            Message::AlbumArtLoadedPlayer(bus_name, handle) => {
+                self.handle_album_art_loaded_player(bus_name, handle)
+            }
+            Message::ToggleShowAllPlayers(enabled) => self.handle_toggle_show_all_players(enabled),
+            Message::ToggleHideInactive(enabled) => self.handle_toggle_hide_inactive(enabled),
         }
     }
 
@@ -228,6 +256,23 @@ impl CosmicAppletMusic {
     }
 
     fn handle_find_player(&mut self) -> Task<Message> {
+        // Check if in multi-player mode
+        let show_all_players = self
+            .config_manager
+            .as_ref()
+            .map(|config| config.get_show_all_players())
+            .unwrap_or(false);
+
+        if show_all_players {
+            // In multi-player mode, update all players
+            let _ = self.music_controller.discover_all_players();
+            let all_players = self.music_controller.get_all_players_info();
+            return Task::done(cosmic::Action::App(Message::UpdateAllPlayersInfo(
+                all_players,
+            )));
+        }
+
+        // Single-player mode
         if let Some(ref config) = self.config_manager {
             // Use new selected player approach
             if let Some(selected_player) = config.get_selected_player() {
@@ -306,5 +351,129 @@ impl CosmicAppletMusic {
             let _ = config.set_selected_player(player);
         }
         Task::done(cosmic::Action::App(Message::FindPlayer))
+    }
+
+    fn handle_update_all_players_info(&mut self, players_info: Vec<PlayerInfo>) -> Task<Message> {
+        // Update the list of all players
+        self.all_players_info = players_info.clone();
+
+        // Load album arts for new players
+        let mut tasks = Vec::new();
+        for player in players_info {
+            if let Some(ref art_url) = player.art_url {
+                if !self.player_album_arts.contains_key(&player.bus_name) {
+                    let bus_name = player.bus_name.clone();
+                    let url = art_url.clone();
+                    tasks.push(Task::done(cosmic::Action::App(
+                        Message::LoadAlbumArtPlayer(bus_name, url),
+                    )));
+                }
+            }
+        }
+
+        Task::batch(tasks)
+    }
+
+    fn handle_play_pause_player(&mut self, bus_name: String) -> Task<Message> {
+        let _ = self.music_controller.play_pause_player(&bus_name);
+
+        // Update the player info
+        Task::batch([
+            Task::done(cosmic::Action::App(Message::DiscoverPlayers)),
+            Task::done(cosmic::Action::App(Message::UpdateAllPlayersInfo(
+                self.music_controller.get_all_players_info(),
+            ))),
+        ])
+    }
+
+    fn handle_next_player(&mut self, bus_name: String) -> Task<Message> {
+        let _ = self.music_controller.next_player(&bus_name);
+        Task::batch([
+            Task::done(cosmic::Action::App(Message::DiscoverPlayers)),
+            Task::done(cosmic::Action::App(Message::UpdateAllPlayersInfo(
+                self.music_controller.get_all_players_info(),
+            ))),
+        ])
+    }
+
+    fn handle_previous_player(&mut self, bus_name: String) -> Task<Message> {
+        let _ = self.music_controller.previous_player(&bus_name);
+        Task::batch([
+            Task::done(cosmic::Action::App(Message::DiscoverPlayers)),
+            Task::done(cosmic::Action::App(Message::UpdateAllPlayersInfo(
+                self.music_controller.get_all_players_info(),
+            ))),
+        ])
+    }
+
+    fn handle_volume_changed_player(&mut self, bus_name: String, volume: f64) -> Task<Message> {
+        let _ = self.music_controller.set_volume_player(&bus_name, volume);
+
+        // Update the player info in the list
+        if let Some(player) = self
+            .all_players_info
+            .iter_mut()
+            .find(|p| p.bus_name == bus_name)
+        {
+            player.volume = volume;
+        }
+
+        Task::none()
+    }
+
+    fn handle_load_album_art_player(&mut self, bus_name: String, url: String) -> Task<Message> {
+        Task::perform(
+            async move {
+                match reqwest::get(&url).await {
+                    Ok(response) => match response.bytes().await {
+                        Ok(bytes) => {
+                            let handle = cosmic::iced::widget::image::Handle::from_bytes(bytes);
+                            (bus_name, Some(handle))
+                        }
+                        Err(_) => (bus_name, None),
+                    },
+                    Err(_) => (bus_name, None),
+                }
+            },
+            |(bus_name, handle)| {
+                cosmic::Action::App(Message::AlbumArtLoadedPlayer(bus_name, handle))
+            },
+        )
+    }
+
+    fn handle_album_art_loaded_player(
+        &mut self,
+        bus_name: String,
+        handle: Option<cosmic::iced::widget::image::Handle>,
+    ) -> Task<Message> {
+        if let Some(handle) = handle {
+            self.player_album_arts.insert(bus_name, handle);
+        }
+        Task::none()
+    }
+
+    fn handle_toggle_show_all_players(&mut self, enabled: bool) -> Task<Message> {
+        if let Some(ref mut config) = self.config_manager {
+            let _ = config.set_show_all_players(enabled);
+        }
+
+        // If enabling, discover and update all players
+        if enabled {
+            Task::batch([
+                Task::done(cosmic::Action::App(Message::DiscoverPlayers)),
+                Task::done(cosmic::Action::App(Message::UpdateAllPlayersInfo(
+                    self.music_controller.get_all_players_info(),
+                ))),
+            ])
+        } else {
+            Task::none()
+        }
+    }
+
+    fn handle_toggle_hide_inactive(&mut self, enabled: bool) -> Task<Message> {
+        if let Some(ref mut config) = self.config_manager {
+            let _ = config.set_hide_inactive_players(enabled);
+        }
+        Task::none()
     }
 }

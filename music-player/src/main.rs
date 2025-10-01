@@ -3,6 +3,7 @@
 /// The `app` module is used by convention to indicate the main component of our
 /// application.
 mod app;
+mod audio;
 mod config;
 mod music;
 

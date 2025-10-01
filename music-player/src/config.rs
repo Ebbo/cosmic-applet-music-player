@@ -9,6 +9,8 @@ pub struct AppConfig {
     pub enabled_players: HashSet<String>,
     pub auto_detect_new_players: bool,
     pub selected_player: Option<String>,
+    pub show_all_players: bool,
+    pub hide_inactive_players: bool,
 }
 
 impl Default for AppConfig {
@@ -17,6 +19,8 @@ impl Default for AppConfig {
             enabled_players: HashSet::new(),
             auto_detect_new_players: true,
             selected_player: None,
+            show_all_players: false,
+            hide_inactive_players: false,
         }
     }
 }
@@ -65,6 +69,24 @@ impl ConfigManager {
             self.save_config()?;
         }
         Ok(())
+    }
+
+    pub fn get_show_all_players(&self) -> bool {
+        self.app_config.show_all_players
+    }
+
+    pub fn set_show_all_players(&mut self, show_all: bool) -> anyhow::Result<()> {
+        self.app_config.show_all_players = show_all;
+        self.save_config()
+    }
+
+    pub fn get_hide_inactive_players(&self) -> bool {
+        self.app_config.hide_inactive_players
+    }
+
+    pub fn set_hide_inactive_players(&mut self, hide_inactive: bool) -> anyhow::Result<()> {
+        self.app_config.hide_inactive_players = hide_inactive;
+        self.save_config()
     }
 
     fn save_config(&self) -> anyhow::Result<()> {

@@ -23,10 +23,32 @@ impl AppIcon {
 }
 
 pub fn view(app: &CosmicAppletMusic) -> Element<'_, Message> {
-    let icon = match app.player_info.status {
-        PlaybackStatus::Playing => AppIcon::Paused, // Show pause when playing
-        PlaybackStatus::Paused => AppIcon::Playing, // Show play when paused
-        PlaybackStatus::Stopped => AppIcon::Playing, // Show play when stopped
+    // Check if in multi-player mode
+    let show_all_players = app
+        .config_manager
+        .as_ref()
+        .map(|config| config.get_show_all_players())
+        .unwrap_or(false);
+
+    let icon = if show_all_players {
+        // In multi-player mode, check if ANY player is playing
+        let any_playing = app
+            .all_players_info
+            .iter()
+            .any(|p| p.status == PlaybackStatus::Playing);
+
+        if any_playing {
+            AppIcon::Paused // Show pause when any player is playing
+        } else {
+            AppIcon::Playing // Show play when nothing is playing
+        }
+    } else {
+        // Single-player mode
+        match app.player_info.status {
+            PlaybackStatus::Playing => AppIcon::Paused, // Show pause when playing
+            PlaybackStatus::Paused => AppIcon::Playing, // Show play when paused
+            PlaybackStatus::Stopped => AppIcon::Playing, // Show play when stopped
+        }
     };
 
     use cosmic::iced::mouse;

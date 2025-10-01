@@ -19,6 +19,7 @@ image = "0.25.6"
 bytes = "1.10.1"
 toml = "0.8"
 cosmic-config = { git = "https://github.com/pop-os/libcosmic.git", rev = "52b802a" }
+libpulse-binding = "2.28"
 
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic.git"
