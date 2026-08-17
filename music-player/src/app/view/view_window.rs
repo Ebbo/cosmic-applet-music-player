@@ -1,6 +1,8 @@
 use crate::app::{CosmicAppletMusic, Message, PopupTab};
-use cosmic::{theme, Element};
+use cosmic::{Element, theme, widget::Column, widget::Container};
 use mpris::PlaybackStatus;
+
+const COVER_SIZE : f32 = 80.0;
 
 pub fn view_window(app: &CosmicAppletMusic, _id: cosmic::iced::window::Id) -> Element<'_, Message> {
     let cosmic::cosmic_theme::Spacing {
@@ -57,6 +59,53 @@ pub fn view_window(app: &CosmicAppletMusic, _id: cosmic::iced::window::Id) -> El
         .into()
 }
 
+pub fn get_song_info<'a>(app : &'a CosmicAppletMusic, space : f32) -> Column<'a, Message> {
+    cosmic::widget::column()
+        .spacing(space)
+        .push(cosmic::widget::text::title4(&app.player_info.title))
+        .push(cosmic::widget::text::body(&app.player_info.artist))
+}
+
+pub fn get_album_cover<'a>(app: &'a CosmicAppletMusic, size: f32) -> Container<'a, Message, cosmic::Theme> {
+    let content = if let Some(ref handle) = app.album_art_handle {
+        cosmic::widget::container(
+            cosmic::widget::image(handle.clone())
+                .width(cosmic::iced::Length::Fixed(size))
+                .height(cosmic::iced::Length::Fixed(size))
+                .content_fit(cosmic::iced::ContentFit::Cover),
+        )
+        .width(cosmic::iced::Length::Fixed(size))
+        .height(cosmic::iced::Length::Fixed(size))
+        .class(cosmic::theme::Container::Card)
+    } else if app.player_info.art_url.is_some() {
+        // Loading state
+        cosmic::widget::container(
+            cosmic::widget::column()
+                .push(cosmic::widget::icon::from_name("image-loading-symbolic").size(32))
+                .push(cosmic::widget::text::caption("Loading...").size(10))
+                .spacing(4)
+                .align_x(cosmic::iced::Alignment::Center),
+        )
+        .width(cosmic::iced::Length::Fixed(size))
+        .height(cosmic::iced::Length::Fixed(size))
+        .align_x(cosmic::iced::alignment::Horizontal::Center)
+        .align_y(cosmic::iced::alignment::Vertical::Center)
+        .class(cosmic::theme::Container::Card)
+    } else {
+        // No art available
+        cosmic::widget::container(
+            cosmic::widget::icon::from_name("audio-headphones-symbolic").size(48),
+        )
+        .width(cosmic::iced::Length::Fixed(size))
+        .height(cosmic::iced::Length::Fixed(size))
+        .align_x(cosmic::iced::alignment::Horizontal::Center)
+        .align_y(cosmic::iced::alignment::Vertical::Center)
+        .class(cosmic::theme::Container::Card)
+    };
+
+    return content;
+}
+
 fn view_controls_tab(app: &CosmicAppletMusic, space_s: f32, space_m: f32) -> Element<'_, Message> {
     // Check if "show all players" mode is enabled
     let show_all_players = app
@@ -95,46 +144,9 @@ fn view_controls_tab(app: &CosmicAppletMusic, space_s: f32, space_m: f32) -> Ele
     }
 
     // Album cover
-    let album_cover = if let Some(ref handle) = app.album_art_handle {
-        cosmic::widget::container(
-            cosmic::widget::image(handle.clone())
-                .width(cosmic::iced::Length::Fixed(80.0))
-                .height(cosmic::iced::Length::Fixed(80.0))
-                .content_fit(cosmic::iced::ContentFit::Cover),
-        )
-        .width(cosmic::iced::Length::Fixed(80.0))
-        .height(cosmic::iced::Length::Fixed(80.0))
-        .class(cosmic::theme::Container::Card)
-    } else if app.player_info.art_url.is_some() {
-        // Loading state
-        cosmic::widget::container(
-            cosmic::widget::column()
-                .push(cosmic::widget::icon::from_name("image-loading-symbolic").size(32))
-                .push(cosmic::widget::text::caption("Loading...").size(10))
-                .spacing(4)
-                .align_x(cosmic::iced::Alignment::Center),
-        )
-        .width(cosmic::iced::Length::Fixed(80.0))
-        .height(cosmic::iced::Length::Fixed(80.0))
-        .align_x(cosmic::iced::alignment::Horizontal::Center)
-        .align_y(cosmic::iced::alignment::Vertical::Center)
-        .class(cosmic::theme::Container::Card)
-    } else {
-        // No art available
-        cosmic::widget::container(
-            cosmic::widget::icon::from_name("audio-headphones-symbolic").size(48),
-        )
-        .width(cosmic::iced::Length::Fixed(80.0))
-        .height(cosmic::iced::Length::Fixed(80.0))
-        .align_x(cosmic::iced::alignment::Horizontal::Center)
-        .align_y(cosmic::iced::alignment::Vertical::Center)
-        .class(cosmic::theme::Container::Card)
-    };
+    let album_cover = get_album_cover(app, COVER_SIZE);
 
-    let song_info = cosmic::widget::column()
-        .spacing(space_s)
-        .push(cosmic::widget::text::title4(&app.player_info.title))
-        .push(cosmic::widget::text::body(&app.player_info.artist));
+    let song_info = get_song_info(app, space_s);
 
     let info_row = cosmic::widget::row()
         .spacing(space_m)
@@ -200,6 +212,56 @@ fn view_settings_tab(app: &CosmicAppletMusic, _space_s: f32, space_m: f32) -> El
 
     let mut settings_content = cosmic::widget::column().spacing(space_m);
 
+    // Controls customization
+    settings_content = settings_content.push(cosmic::widget::text::title4("Controls Customization"));
+
+    if let Some(ref config) = app.config_manager {
+        let show_controls = config.get_show_controls();
+
+        let show_controls_checkbox =
+            cosmic::widget::checkbox("Show controls", show_controls)
+                .on_toggle(Message::ToggleShowControls);
+
+        settings_content = settings_content.push(show_controls_checkbox);
+
+        let show_info_pane = config.get_show_info_pane();
+
+        let show_info_pane_checkbox =
+            cosmic::widget::checkbox("Show info pane", show_info_pane)
+                .on_toggle(Message::ToggleShowInfoPane);
+
+        settings_content = settings_content.push(show_info_pane_checkbox);
+
+        // Show these options only if info pane is displayed
+        if show_info_pane {
+            let info_pane_side_left = config.get_info_pane_left();
+
+            let info_pane_side_checkbox =
+            cosmic::widget::checkbox("Info pane to the left", info_pane_side_left)
+                .on_toggle(Message::SwitchInfoPaneSide);
+
+            settings_content = settings_content.push(info_pane_side_checkbox);
+
+            let info_pane_width = config.get_info_pane_width();
+
+            let info_pane_size_slider = cosmic::widget::column()
+                .push( "Info pane width")
+                .push(cosmic::widget::slider(20..=500, info_pane_width, Message::UpdateInfoPaneSize));
+
+            settings_content = settings_content.push(info_pane_size_slider);
+
+            let album_size = config.get_album_size();
+
+            let album_size_slider = cosmic::widget::column()
+                .push( "Album miniature size")
+                .push(cosmic::widget::slider(20..=100, album_size, Message::UpdateAlbumSize));
+
+            settings_content = settings_content.push(album_size_slider);
+        }
+
+
+    }
+    
     // Multi-player mode section
     settings_content = settings_content.push(cosmic::widget::text::title4("Multi-Player Mode"));
 

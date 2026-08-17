@@ -21,6 +21,16 @@ The settings interface allows you to:
 - Select which player to control
 - Enable/disable auto-detection of new players
 
+### Extended Display
+<img src="Music_Player_Display_in_Dock.png" alt="Settings Tab">
+
+In the settings interface, you can customize the following:
+- Display player controls in the dock/panel
+- Display the artist, song title and album in the dock/panel
+- Customize the sizes of the different components
+
+Using the configuration file, icons can be customized as well.
+
 ## Features
 
 ### 🎵 **Music Control**

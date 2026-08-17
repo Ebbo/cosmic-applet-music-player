@@ -11,6 +11,25 @@ pub struct AppConfig {
     pub selected_player: Option<String>,
     pub show_all_players: bool,
     pub hide_inactive_players: bool,
+    #[serde(default)]
+    pub custom_play_icon: Option<String>,
+    #[serde(default)]
+    pub custom_pause_icon: Option<String>,
+    #[serde(default)]
+    pub custom_next_icon: Option<String>,
+    #[serde(default)]
+    pub custom_previous_icon: Option<String>,
+    pub show_controls: bool,
+    #[serde(default)]
+    pub show_info_pane: bool,
+    #[serde(default)]
+    pub info_pane_left: bool, //true = Left, false = Right
+    #[serde(default)]
+    pub info_pane_width: u32,
+    #[serde(default)]
+    pub album_size: u32,
+
+
 }
 
 impl Default for AppConfig {
@@ -21,6 +40,15 @@ impl Default for AppConfig {
             selected_player: None,
             show_all_players: false,
             hide_inactive_players: false,
+            custom_play_icon: None,
+            custom_pause_icon: None,
+            custom_next_icon: None,
+            custom_previous_icon: None,
+            show_controls: false,
+            show_info_pane: false,
+            info_pane_left: true,
+            info_pane_width: 250,
+            album_size: 70
         }
     }
 }
@@ -88,6 +116,68 @@ impl ConfigManager {
         self.app_config.hide_inactive_players = hide_inactive;
         self.save_config()
     }
+
+    pub fn get_custom_play_icon(&self) -> Option<String> {
+        self.app_config.custom_play_icon.clone()
+    }
+
+    pub fn get_custom_pause_icon(&self) -> Option<String> {
+        self.app_config.custom_pause_icon.clone()
+    }
+
+    pub fn get_custom_next_icon(&self) -> Option<String> {
+        self.app_config.custom_next_icon.clone()
+    }
+
+    pub fn get_custom_previous_icon(&self) -> Option<String> {
+        self.app_config.custom_previous_icon.clone()
+    }
+
+    pub fn get_show_controls(&self) -> bool {
+        self.app_config.show_controls
+    }
+
+    pub fn set_show_controls(&mut self, show_buttons: bool) -> anyhow::Result<()> {
+        self.app_config.show_controls = show_buttons;
+        self.save_config()
+    }
+
+    pub fn get_show_info_pane(&self) -> bool {
+        self.app_config.show_info_pane
+    }
+
+    pub fn set_show_info_pane(&mut self, show_info_pane: bool) -> anyhow::Result<()> {
+        self.app_config.show_info_pane = show_info_pane;
+        self.save_config()
+    }
+
+    pub fn get_info_pane_left(&self) -> bool {
+        self.app_config.info_pane_left
+    }
+
+    pub fn set_info_pane_left(&mut self, info_pane_left: bool) -> anyhow::Result<()> {
+        self.app_config.info_pane_left = info_pane_left;
+        self.save_config()
+    }
+
+    pub fn get_info_pane_width(&self) -> u32 {
+        self.app_config.info_pane_width
+    }
+
+    pub fn set_info_pane_width(&mut self, info_pane_width: u32) -> anyhow::Result<()> {
+        self.app_config.info_pane_width = info_pane_width;
+        self.save_config()
+    }
+
+    pub fn get_album_size(&self) -> u32 {
+        self.app_config.album_size
+    }
+
+    pub fn set_album_size(&mut self, size: u32) -> anyhow::Result<()> {
+        self.app_config.album_size = size;
+        self.save_config()
+    }
+
 
     fn save_config(&self) -> anyhow::Result<()> {
         self.config.set("config", &self.app_config)?;
